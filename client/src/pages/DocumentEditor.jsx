@@ -40,6 +40,9 @@ const DocumentEditor = () => {
   const [error, setError] = useState('');
   const [saveError, setSaveError] = useState('');
 
+  // Store fetched HTML content string independently of TipTap initialization
+  const [docContent, setDocContent] = useState(null);
+
   // Share Modal States
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareEmail, setShareEmail] = useState('');
@@ -47,7 +50,7 @@ const DocumentEditor = () => {
   const [shareStatus, setShareStatus] = useState({ type: '', message: '' }); // type: 'success' | 'error'
   const [sharedUsers, setSharedUsers] = useState([]);
 
-  // Track currently loaded document ID to handle route transitions without page refresh
+  // Track currently populated document ID to handle route transitions cleanly
   const loadedDocIdRef = useRef(null);
 
   // Initialize TipTap Editor
@@ -67,24 +70,29 @@ const DocumentEditor = () => {
     },
   });
 
-  // Fetch Document from API when id or editor changes
+  // 1. Fetch Document from API immediately whenever `id` changes (independent of TipTap editor state)
   useEffect(() => {
+    let isMounted = true;
+
     const fetchDocument = async () => {
+      if (!id || id === 'undefined') return;
+
       setLoading(true);
       setError('');
+      setDocContent(null);
+
       try {
         const res = await api.get(`/documents/${id}`);
+        if (!isMounted) return;
+
         const doc = res.data.document;
         setTitle(doc.title || 'Untitled Document');
         setIsOwner(res.data.isOwner);
         setDocOwner(doc.owner);
-
-        if (editor && editor.commands) {
-          editor.commands.setContent(doc.content || '');
-          loadedDocIdRef.current = id;
-        }
+        setDocContent(doc.content || '');
         setSaveStatus('saved');
       } catch (err) {
+        if (!isMounted) return;
         console.error('Fetch document error:', err);
         const status = err.response?.status;
         if (status === 403) {
@@ -95,14 +103,26 @@ const DocumentEditor = () => {
           setError('Unable to load document. Please try again.');
         }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    if (editor && loadedDocIdRef.current !== id) {
-      fetchDocument();
+    fetchDocument();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  // 2. Populate TipTap Editor content as soon as both `editor` instance and `docContent` are available
+  useEffect(() => {
+    if (editor && !editor.isDestroyed && docContent !== null && loadedDocIdRef.current !== id) {
+      editor.commands.setContent(docContent);
+      loadedDocIdRef.current = id;
     }
-  }, [id, editor]);
+  }, [editor, docContent, id]);
 
   // Fetch Shared Users when Share Modal opens
   const fetchShares = async () => {
@@ -211,7 +231,7 @@ const DocumentEditor = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
         <div className="flex items-center space-x-3 text-slate-600">
           <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
           <span className="font-semibold text-sm">Loading document...</span>
@@ -222,7 +242,7 @@ const DocumentEditor = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
         <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm max-w-md w-full text-center">
           <AlertCircle className="w-10 h-10 text-red-600 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-slate-900 mb-2">{error}</h2>
@@ -449,7 +469,7 @@ const DocumentEditor = () => {
 
       {/* Share Modal */}
       {shareModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 font-sans">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 animate-scale-in">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
               <div className="flex items-center space-x-2">

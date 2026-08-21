@@ -102,4 +102,38 @@ describe('Auth API Endpoints', () => {
     expect(res.status).toBe(401);
     expect(res.body.message).toMatch(/not authorized/i);
   });
+
+  // Test 6: Registration - POST /api/auth/register success
+  it('POST /api/auth/register - should create a new user account successfully', async () => {
+    await User.deleteOne({ email: 'newtestuser@example.com' });
+
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Test Registration User',
+        email: 'newtestuser@example.com',
+        password: 'TestPassword@123',
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('user');
+    expect(res.body.user.name).toBe('Test Registration User');
+    expect(res.body.user.email).toBe('newtestuser@example.com');
+    expect(res.body.user).not.toHaveProperty('password');
+    expect(res.body.user).not.toHaveProperty('passwordHash');
+  });
+
+  // Test 7: Registration - POST /api/auth/register duplicate email conflict
+  it('POST /api/auth/register - should reject duplicate email with 409 Conflict', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Duplicate Test',
+        email: 'newtestuser@example.com',
+        password: 'TestPassword@123',
+      });
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe('An account with this email already exists.');
+  });
 });

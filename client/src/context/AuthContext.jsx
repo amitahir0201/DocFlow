@@ -44,6 +44,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (name, email, password) => {
+    try {
+      const res = await api.post('/auth/register', { name, email, password });
+      return { success: true, message: res.data.message || 'Account created successfully.' };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Unable to create account. Please try again.';
+      return { success: false, message };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setToken(null);
@@ -51,7 +61,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

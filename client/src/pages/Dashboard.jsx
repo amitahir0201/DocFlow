@@ -57,6 +57,7 @@ const Dashboard = () => {
   }, []);
 
   const handleCreateDocument = async () => {
+    if (creating) return;
     setCreating(true);
     setError('');
     try {
@@ -65,7 +66,13 @@ const Dashboard = () => {
         content: '',
       });
       const newDoc = res.data.document;
-      navigate(`/document/${newDoc.id}`);
+      const docId = newDoc?.id || newDoc?._id;
+      if (docId) {
+        navigate(`/document/${docId}`);
+      } else {
+        setError('Unable to create document. Please try again.');
+        setCreating(false);
+      }
     } catch (err) {
       console.error('Create document error:', err);
       setError('Unable to create document. Please try again.');
@@ -106,7 +113,12 @@ const Dashboard = () => {
     try {
       const res = await api.post('/upload', formData);
       const newDoc = res.data.document;
-      navigate(`/document/${newDoc.id}`);
+      const docId = newDoc?.id || newDoc?._id;
+      if (docId) {
+        navigate(`/document/${docId}`);
+      } else {
+        setError('Unable to upload file. Please try again.');
+      }
     } catch (err) {
       console.error('Upload file error:', err);
       const message =
