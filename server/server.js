@@ -14,6 +14,8 @@ const PORT = process.env.PORT || 5000;
 // Production CORS Configuration
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  'https://dockflowteam.vercel.app',
+  'https://docflow-client.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
@@ -30,6 +32,8 @@ app.use(
       }
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
