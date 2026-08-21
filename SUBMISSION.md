@@ -7,18 +7,20 @@
 
 ---
 
-## Important Links
+## 🔗 Important Links
 
-* **Live Application (Frontend)**: [https://dockflowteam.vercel.app](https://dockflowteam.vercel.app)
-* **Live API (Backend)**: [https://docflow-0m70.onrender.com](https://docflow-0m70.onrender.com)
-* **API Health Check**: [https://docflow-0m70.onrender.com/api/health](https://docflow-0m70.onrender.com/api/health)
-* **GitHub Repository**: [https://github.com/amitahir0201/DocFlow.git](https://github.com/amitahir0201/DocFlow.git)
-* **Google Drive Submission Folder**: TODO: Add before submission
-* **Walkthrough Video**: TODO: Add before submission
+| Resource | URL |
+|---|---|
+| 🚀 **Live Web App (Frontend)** | [dockflowteam.vercel.app](https://dockflowteam.vercel.app) |
+| ⚡ **Production API (Backend)** | [docflow-0m70.onrender.com](https://docflow-0m70.onrender.com) |
+| 💚 **API Health Check** | [docflow-0m70.onrender.com/api/health](https://docflow-0m70.onrender.com/api/health) |
+| 📦 **GitHub Repository** | [github.com/amitahir0201/DocFlow](https://github.com/amitahir0201/DocFlow) |
+| 📁 **Google Drive Submission Folder** | TODO: Add before submission |
+| 📹 **Walkthrough Video** | TODO: Add before submission |
 
 ---
 
-## Reviewer Test Credentials
+## 🔑 Reviewer Test Credentials
 
 | Account Role | Email | Password |
 |---|---|---|
@@ -29,7 +31,7 @@
 
 ---
 
-## Quick Reviewer Walkthrough (5-Minute End-to-End Flow)
+## 🚀 Quick Reviewer Walkthrough (5-Minute End-to-End Flow)
 
 1. Open [https://dockflowteam.vercel.app](https://dockflowteam.vercel.app).
 2. Click **Amit Ahir** on the demo accounts bar (or enter `amit@example.com` / `Amit@123`) and click **Sign In**.
@@ -45,7 +47,7 @@
 
 ---
 
-## Implemented Feature Checklist
+## ✅ Implemented Feature Checklist
 
 ### Core Document Operations
 - [x] **Create Document**: Instant creation via REST API and routing to editor.
@@ -83,7 +85,7 @@
 
 ---
 
-## Deprioritized / Non-Implemented Features (Timebox Tradeoffs)
+## 📌 Deprioritized / Non-Implemented Features (Timebox Tradeoffs)
 
 - [ ] **Real-Time WebSocket Collaboration**: Omitted to deliver a rock-solid core CRUD, persistence, and authorization system within the timebox.
 - [ ] **Autosave**: Manual saving with explicit status badges (`Saved`, `Unsaved changes`, `Saving...`) was chosen to prevent race conditions and excessive API traffic.
@@ -93,7 +95,7 @@
 
 ---
 
-## Technical Stack Summary
+## 🛠️ Technical Stack Summary
 
 ```text
 Frontend: React 19 + Vite 8 + Tailwind CSS v4 + TipTap (@tiptap/react, starter-kit, extension-underline)
@@ -107,7 +109,7 @@ Deployment: Vercel (Client) + Render (Server)
 
 ---
 
-## Architecture Diagram
+## 🏗️ Architecture Diagram
 
 ```text
 React 19 / Vite SPA (Vercel)
@@ -129,7 +131,7 @@ MongoDB Atlas Database
 
 ---
 
-## Key Engineering Decisions
+## 💡 Key Engineering Decisions
 
 1. **Simple REST Architecture**: Standard JSON endpoints allow predictable debugging, state handling, and automated integration testing.
 2. **HTML Content Format**: TipTap content stored as HTML strings in MongoDB simplifies text file imports and document rendering.
@@ -139,7 +141,7 @@ MongoDB Atlas Database
 
 ---
 
-## AI-Native Workflow
+## 🤖 AI-Native Workflow
 
 ### AI Tools Used
 * **Antigravity AI Agent** (Powered by Gemini 3.6 Flash High model)
@@ -162,7 +164,7 @@ MongoDB Atlas Database
 
 ---
 
-## Automated Test Suite
+## 🧪 Automated Test Suite
 
 * **Testing Framework**: Vitest + Supertest
 * **Test Command**: `cd server && npm test`
@@ -174,7 +176,7 @@ MongoDB Atlas Database
 
 ---
 
-## What I Would Build Next (2–4 Hours Roadmap)
+## 🚀 What I Would Build Next (2–4 Hours Roadmap)
 
 1. **Real-Time Cursor Presence & Collaborative Sync**: Integrate Yjs and WebSockets for real-time multiplayer editing.
 2. **Inline Comments & Document Annotations**: Allow team members to highlight text and leave threaded comments.
@@ -183,7 +185,7 @@ MongoDB Atlas Database
 
 ---
 
-## Included Submission Materials (Google Drive Folder Structure)
+## 📁 Included Submission Materials (Google Drive Folder Structure)
 
 ```text
 docflow-submission/
@@ -199,7 +201,7 @@ docflow-submission/
 
 ---
 
-## Final Summary Links
+## 🔗 Final Summary Links
 
 * **Live Application**: [https://dockflowteam.vercel.app](https://dockflowteam.vercel.app)
 * **Backend API**: [https://docflow-0m70.onrender.com](https://docflow-0m70.onrender.com)

@@ -1,212 +1,149 @@
-# DocFlow Architecture
+# DocFlow — Architecture & Technical Design
 
-## System Overview
+DocFlow is architected as a decoupled, multi-tier web application built for reliability, security, and developer clarity.
 
-DocFlow is architected as a decoupled, multi-tier web application:
+---
+
+## 🏗️ 1. Multi-Tier System Architecture
 
 ```text
-React / Vite Frontend (Vercel)
-        ↓ HTTPS (Axios + JWT)
-Express REST API (Render)
-        ↓ Mongoose ODM
-MongoDB Atlas Database
++-------------------------------------------------------------------------+
+|                         React 19 / Vite SPA                             |
+|  • Hosted on Vercel: https://dockflowteam.vercel.app                    |
+|  • Single Page Navigation & React Router DOM v7                         |
+|  • TipTap Rich Text Engine (@tiptap/react, starter-kit, underline)      |
+|  • Axios HTTP Client with Bearer Token & 401 Interceptors               |
++-------------------------------------------------------------------------+
+                                     │
+                                     │ HTTPS / REST (JSON)
+                                     ▼
++-------------------------------------------------------------------------+
+|                        Node.js / Express.js API                         |
+|  • Hosted on Render: https://docflow-0m70.onrender.com                  |
+|  • JWT Authentication Middleware                                        |
+|  • Strict Authorization Matrix (Owner vs Shared User Verification)      |
+|  • Multer MemoryStorage File Parser (.txt / .md)                        |
++-------------------------------------------------------------------------+
+                                     │
+                                     │ Mongoose ODM
+                                     ▼
++-------------------------------------------------------------------------+
+|                         MongoDB Atlas Database                          |
+|  • Collections: Users, Documents, Shares                                |
++-------------------------------------------------------------------------+
 ```
 
 ---
 
-## Frontend Architecture
+## 🎨 2. Frontend Component Architecture
 
-The frontend is a single-page application built with React 19, Vite, and Tailwind CSS.
+### Page Components
+- **`Login.jsx`**: Handles authentication form submission, demo account auto-filling, and Team Registration toggle.
+- **`Dashboard.jsx`**: Main workspace hub rendering **"My Documents"** and **"Shared With Me"** tabs, document creation, file upload triggers, and card navigation.
+- **`DocumentEditor.jsx`**: TipTap rich-text editing environment featuring inline title renaming, toolbar formatting, save status management (`Saved`, `Unsaved changes`, `Saving...`), delete, and email sharing modal.
 
-### Pages & Responsibilities
-- **`Login.jsx`**: Handles authentication form submission, error messaging, and quick demo account filling.
-- **`Dashboard.jsx`**: Main workspace hub rendering "My Documents" and "Shared With Me" tabs, handling document creation, file upload triggers, and card navigation.
-- **`DocumentEditor.jsx`**: TipTap rich text editing environment featuring inline title renaming, toolbar formatting, save status management, delete, and sharing modal.
-
-### Context & State Management
-- **`AuthContext.jsx`**: Manages global user authentication state (`user`, `token`, `loading`, `login`, `logout`) and auto-validates sessions on app startup via `/api/auth/me`.
-
-### HTTP Services
-- **`services/api.js`**: Configures Axios base URL (`VITE_API_URL`) and injects JWT Bearer tokens in request headers. Also handles 401 Unauthorized response redirects.
-
-### Guards
-- **`ProtectedRoute.jsx`**: Restricts unauthorized route access and displays loading indicator during initial auth checks.
+### State & Services
+- **`AuthContext.jsx`**: Manages global user authentication state (`user`, `token`, `loading`, `login`, `register`, `logout`) and auto-validates sessions on app startup via `GET /api/auth/me`.
+- **`services/api.js`**: Configures Axios base URL (`VITE_API_URL`) and injects JWT Bearer tokens in request headers. Automatically catches `401 Unauthorized` responses to clear expired local tokens.
+- **`ProtectedRoute.jsx`**: Route guard preventing unauthenticated access and displaying loading indicators during session restoration.
 
 ---
 
-## Backend Architecture
+## ⚙️ 3. Backend Architecture
 
-The backend follows an Express.js MVC pattern:
-
+### Directory Responsibilities
 ```text
-HTTP Request
-     ↓
-Routes (authRoutes, documentRoutes, uploadRoutes)
-     ↓
-Middleware (authMiddleware, uploadMiddleware)
-     ↓
-Controllers (authController, documentController, shareController, uploadController)
-     ↓
-Models (User, Document, Share)
-     ↓
-MongoDB Atlas Database
+server/
+├── config/          # Database connection setup (connectDB)
+├── controllers/     # Business logic handlers (auth, document, share, upload)
+├── middleware/      # JWT protection (protect) & Multer upload config
+├── models/          # Mongoose schemas (User, Document, Share)
+├── routes/          # Express route definitions
+├── tests/           # Automated integration test suites (Vitest + Supertest)
+└── server.js        # Express application entrypoint & server listener
 ```
 
 ---
 
-## Database Models
+## 📊 4. Database Schema Design
 
-### 1. User (`models/User.js`)
-```text
-name: String (Required)
-email: String (Required, Unique, Lowercase)
-password: String (Required, Bcrypt Hashed)
-createdAt: Date (Default: Date.now)
+### User Model (`models/User.js`)
+```javascript
+{
+  name: { type: String, required: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+}
 ```
-*Note: Passwords are automatically hashed via Mongoose pre-save hook and omitted from JSON output via `toJSON` transform.*
+*Note: Passwords are automatically hashed using `bcryptjs` via Mongoose pre-save hooks and excluded from JSON output via `toJSON` transforms.*
 
-### 2. Document (`models/Document.js`)
-```text
-title: String (Required, Default: "Untitled Document")
-content: String (Default: "")
-owner: ObjectId (Ref: User, Required)
-createdAt: Date (Timestamp)
-updatedAt: Date (Timestamp)
+### Document Model (`models/Document.js`)
+```javascript
+{
+  title: { type: String, required: true, trim: true, default: 'Untitled Document' },
+  content: { type: String, default: '' },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+}
 ```
 
-### 3. Share (`models/Share.js`)
-```text
-document: ObjectId (Ref: Document, Required)
-owner: ObjectId (Ref: User, Required)
-sharedWith: ObjectId (Ref: User, Required)
-createdAt: Date (Timestamp)
+### Share Model (`models/Share.js`)
+```javascript
+{
+  document: { type: mongoose.Schema.Types.ObjectId, ref: 'Document', required: true },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  sharedWith: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now }
+}
 ```
-*Note: Unique compound index on `{ document: 1, sharedWith: 1 }` prevents duplicate document sharing.*
+*Note: A unique compound index on `{ document: 1, sharedWith: 1 }` prevents duplicate document sharing.*
 
 ---
 
-## Authentication Flow
+## 🔒 5. Security & Authorization Matrix
 
-```text
-Login Request (POST /api/auth/login)
-     ↓
-Validate email & password
-     ↓
-Bcrypt compare hashed password
-     ↓
-Sign JWT token with user ID
-     ↓
-Return token & user info to Client
-     ↓
-Client stores token in localStorage
-     ↓
-Subsequent requests include 'Authorization: Bearer <JWT>'
-     ↓
-authMiddleware verifies JWT & attaches req.user
-```
-
----
-
-## Authorization Matrix
+Authorization is strictly enforced on the server (`req.user._id`), never relying solely on frontend UI hiding:
 
 | Action | Document Owner | Shared User | Unrelated User |
 |---|---|---|---|
-| **View List** | Yes (`GET /api/documents`) | Yes (`GET /api/documents/shared`) | No |
-| **Get Document** | Yes (`GET /api/documents/:id`) | Yes (`GET /api/documents/:id`) | Blocked (HTTP 403) |
-| **Update / Save** | Yes (`PUT /api/documents/:id`) | Yes (`PUT /api/documents/:id`) | Blocked (HTTP 403) |
-| **Share Document**| Yes (`POST /api/documents/:id/share`)| Blocked (HTTP 403) | Blocked (HTTP 403) |
-| **Delete Document**| Yes (`DELETE /api/documents/:id`)| Blocked (HTTP 403) | Blocked (HTTP 403) |
+| **View List** | ✅ Allowed (`GET /api/documents`) | ✅ Allowed (`GET /api/documents/shared`) | ❌ Excluded |
+| **Get Document** | ✅ Allowed (`GET /api/documents/:id`) | ✅ Allowed (`GET /api/documents/:id`) | 🛑 Blocked (HTTP 403) |
+| **Update / Save** | ✅ Allowed (`PUT /api/documents/:id`) | ✅ Allowed (`PUT /api/documents/:id`) | 🛑 Blocked (HTTP 403) |
+| **Share Document**| ✅ Allowed (`POST /api/documents/:id/share`)| 🛑 Blocked (HTTP 403) | 🛑 Blocked (HTTP 403) |
+| **Delete Document**| ✅ Allowed (`DELETE /api/documents/:id`)| 🛑 Blocked (HTTP 403) | 🛑 Blocked (HTTP 403) |
 
 ---
 
-## Document Flow
+## 📥 6. File Import Pipeline
 
 ```text
-Create Document
-     ↓
-POST /api/documents → MongoDB Document Created
-     ↓
-Open Editor (/document/:id)
-     ↓
-GET /api/documents/:id → Returns document & sets TipTap content
-     ↓
-Edit Title & Formatting
-     ↓
-Save Document
-     ↓
-PUT /api/documents/:id → Content HTML & Title updated in MongoDB
-```
-
----
-
-## File Import Architecture
-
-```text
-User selects .txt or .md file
-     ↓
+Browser File Selection (.txt / .md)
+                 │
+                 ▼
 FormData sent via POST /api/upload
-     ↓
-uploadMiddleware (Multer MemoryStorage) validates file type & 5MB size limit
-     ↓
-uploadController parses file buffer text to UTF-8
-     ↓
-Convert text / markdown elements (headings, lists) to TipTap HTML
-     ↓
-Create Document model with filename as title
-     ↓
-Return created document & navigate to editor
+                 │
+                 ▼
+uploadMiddleware (Multer MemoryStorage)
+  • Validates extension (.txt / .md)
+  • Enforces 5 MB size limit
+                 │
+                 ▼
+uploadController
+  • Converts buffer text to UTF-8
+  • Parses Markdown headers (# → <h1>) & lists (- → <li>) into HTML
+  • Creates Document model in MongoDB with filename title
+                 │
+                 ▼
+Returns Created Document & Navigates to Editor
 ```
 
 ---
 
-## Document Sharing Flow
+## 💡 7. Architectural Decisions & Tradeoffs
 
-```text
-Owner enters recipient email in Share Modal
-     ↓
-POST /api/documents/:id/share
-     ↓
-Backend validates owner permission, target user existence, and self/duplicate checks
-     ↓
-Create Share record in MongoDB
-     ↓
-Recipient logs in → GET /api/documents/shared populates shared documents
-     ↓
-Recipient opens & edits document (Backend allows PUT /api/documents/:id for shared users)
-```
-
----
-
-## Deployment Architecture
-
-```text
-Vercel (Client SPA)
-  • Host: https://docflow-client.vercel.app
-  • Rewrites all paths to index.html (vercel.json)
-
-Render (Backend Server)
-  • Host: https://docflow-server.onrender.com
-  • Listens on process.env.PORT
-  • Health Endpoint: /api/health
-
-MongoDB Atlas (Database)
-  • Network access configured for Render cluster connection
-```
-
----
-
-## Engineering Tradeoffs
-
-1. **Manual Save vs Autosave**: Manual saving with explicit status badges (`Saved`, `Unsaved changes`, `Saving...`) was chosen to provide determinism, eliminate race conditions while typing, and prevent excessive API traffic.
-2. **HTML Content Storage**: Storing standard HTML strings simplifies file importing, document rendering, and persistence verification compared to raw node AST trees.
-3. **Memory Storage for Multer**: Using memory buffers for `.txt`/`.md` imports keeps server execution stateless, cloud-ready, and eliminates temporary disk cleanup code.
-4. **No Real-Time WebSockets**: Intentionally omitted to prioritize robust core document functionality, sharing, and authorization within the 3-hour MVP timebox.
-
----
-
-## Security Considerations
-
-- Passwords are bcrypt-hashed before storage and stripped from JSON serialization.
-- JWT tokens are signed using environment secrets (`JWT_SECRET`).
-- Authorization is strictly enforced on the backend (`req.user._id`), never relying solely on frontend UI hiding.
-- Uploaded files are validated by extension and size (5 MB limit) with HTML special characters escaped.
+1. **Manual Save with Status Badges**: Manual saving with explicit status badges (`Saved`, `Unsaved changes`, `Saving...`) provides complete user control, eliminates race conditions while typing, and prevents excessive database writes.
+2. **HTML String Persistence**: Storing TipTap document content as standard HTML strings in MongoDB simplifies text file importing, document rendering, and data verification compared to raw node AST trees.
+3. **Decoupled API Fetching**: Document fetching (`api.get('/documents/' + id)`) was decoupled from TipTap editor initialization in React to eliminate race conditions on initial route navigation.
+4. **Stateless Memory Storage**: Using Multer memory buffers for file imports keeps backend server deployments completely stateless and eliminates temporary disk cleanup code.
