@@ -6,6 +6,8 @@ import User from '../models/User.js';
 import Document from '../models/Document.js';
 import Share from '../models/Share.js';
 
+import connectDB from '../config/db.js';
+
 describe('Document Sharing API & Authorization Matrix', () => {
   let amitToken = '';
   let rahulToken = '';
@@ -13,9 +15,8 @@ describe('Document Sharing API & Authorization Matrix', () => {
   let sharedDocId = '';
 
   beforeAll(async () => {
-    const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/docflow';
     if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(mongoURI);
+      await connectDB();
     }
 
     // Authenticate Amit

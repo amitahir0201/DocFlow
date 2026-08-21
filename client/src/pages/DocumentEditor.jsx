@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
 import api from '../services/api';
 import {
   FileText,
@@ -26,7 +25,8 @@ import {
 } from 'lucide-react';
 
 // Define extensions outside component to prevent TipTap duplicate extension warnings
-const EDITOR_EXTENSIONS = [StarterKit, Underline];
+// StarterKit in TipTap v3 includes Underline by default
+const EDITOR_EXTENSIONS = [StarterKit];
 
 const DocumentEditor = () => {
   const { id } = useParams();

@@ -4,13 +4,14 @@ import mongoose from 'mongoose';
 import app from '../server.js';
 import User from '../models/User.js';
 
+import connectDB from '../config/db.js';
+
 describe('File Upload API (POST /api/upload)', () => {
   let amitToken = '';
 
   beforeAll(async () => {
-    const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/docflow';
     if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(mongoURI);
+      await connectDB();
     }
 
     let amit = await User.findOne({ email: 'amit@example.com' });

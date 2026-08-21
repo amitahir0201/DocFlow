@@ -5,6 +5,8 @@ import app from '../server.js';
 import User from '../models/User.js';
 import Document from '../models/Document.js';
 
+import connectDB from '../config/db.js';
+
 describe('Document API Endpoints & Authorization', () => {
   let amitToken = '';
   let rahulToken = '';
@@ -12,9 +14,8 @@ describe('Document API Endpoints & Authorization', () => {
   let createdDocId = '';
 
   beforeAll(async () => {
-    const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/docflow';
     if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(mongoURI);
+      await connectDB();
     }
 
     // Clear existing docs for clean test runs

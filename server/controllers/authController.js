@@ -79,6 +79,8 @@ export const registerUser = async (req, res) => {
       password,
     });
 
+    console.log(`USER REGISTRATION SUCCESS: ID=${user._id}, Email=${user.email}, Collection=${user.collection.name}`);
+
     return res.status(201).json({
       message: 'Account created successfully.',
       user: {
@@ -89,6 +91,9 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error(`Register error: ${error.message}`);
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'An account with this email already exists.' });
+    }
     return res.status(500).json({ message: 'Unable to create account. Please try again.' });
   }
 };

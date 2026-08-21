@@ -135,19 +135,27 @@ const convertTextToHTML = (text, isMarkdown) => {
 // @access  Private
 export const uploadFile = async (req, res) => {
   try {
+    const ext = req.file ? path.extname(req.file.originalname).toLowerCase() : '';
+    console.log(
+      `UPLOAD DEBUG authenticated user: ${req.user?._id} file exists: ${!!req.file} file field name: ${
+        req.file?.fieldname || 'none'
+      } original filename: ${req.file?.originalname || 'none'} mime type: ${
+        req.file?.mimetype || 'none'
+      } file size: ${req.file?.size || 0} extension: ${ext}`
+    );
+
     if (!req.file) {
-      return res.status(400).json({ message: 'Please select a file to upload.' });
+      return res.status(400).json({ success: false, message: 'Please select a file to upload.' });
     }
 
     const filename = req.file.originalname;
-    const ext = path.extname(filename).toLowerCase();
 
     if (ext !== '.txt' && ext !== '.md') {
-      return res.status(400).json({ message: 'Only .txt and .md files are supported.' });
+      return res.status(400).json({ success: false, message: 'Only .txt and .md files are supported.' });
     }
 
     const title = path.parse(filename).name || 'Untitled Document';
-    const textContent = req.file.buffer.toString('utf-8');
+    const textContent = req.file.buffer ? req.file.buffer.toString('utf-8') : '';
     const isMarkdown = ext === '.md';
     const htmlContent = convertTextToHTML(textContent, isMarkdown);
 
@@ -157,9 +165,9 @@ export const uploadFile = async (req, res) => {
       owner: req.user._id,
     });
 
-    return res.status(201).json({ document });
+    return res.status(201).json({ success: true, document });
   } catch (error) {
     console.error(`Upload error: ${error.message}`);
-    return res.status(500).json({ message: 'Server error uploading file.' });
+    return res.status(500).json({ success: false, message: 'Server error uploading file.' });
   }
 };
