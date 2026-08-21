@@ -25,6 +25,9 @@ import {
   UserCheck,
 } from 'lucide-react';
 
+// Define extensions outside component to prevent TipTap duplicate extension warnings
+const EDITOR_EXTENSIONS = [StarterKit, Underline];
+
 const DocumentEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -36,7 +39,7 @@ const DocumentEditor = () => {
   const [saveStatus, setSaveStatus] = useState('saved'); // 'saved' | 'unsaved' | 'saving'
   const [error, setError] = useState('');
   const [saveError, setSaveError] = useState('');
-  
+
   // Share Modal States
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareEmail, setShareEmail] = useState('');
@@ -44,14 +47,15 @@ const DocumentEditor = () => {
   const [shareStatus, setShareStatus] = useState({ type: '', message: '' }); // type: 'success' | 'error'
   const [sharedUsers, setSharedUsers] = useState([]);
 
-  const isInitialLoaded = useRef(false);
+  // Track currently loaded document ID to handle route transitions without page refresh
+  const loadedDocIdRef = useRef(null);
 
   // Initialize TipTap Editor
   const editor = useEditor({
-    extensions: [StarterKit, Underline],
+    extensions: EDITOR_EXTENSIONS,
     content: '',
     onUpdate: () => {
-      if (isInitialLoaded.current) {
+      if (loadedDocIdRef.current === id) {
         setSaveStatus('unsaved');
       }
     },
@@ -63,7 +67,7 @@ const DocumentEditor = () => {
     },
   });
 
-  // Fetch Document from API
+  // Fetch Document from API when id or editor changes
   useEffect(() => {
     const fetchDocument = async () => {
       setLoading(true);
@@ -75,9 +79,9 @@ const DocumentEditor = () => {
         setIsOwner(res.data.isOwner);
         setDocOwner(doc.owner);
 
-        if (editor && !isInitialLoaded.current) {
+        if (editor && editor.commands) {
           editor.commands.setContent(doc.content || '');
-          isInitialLoaded.current = true;
+          loadedDocIdRef.current = id;
         }
         setSaveStatus('saved');
       } catch (err) {
@@ -95,7 +99,7 @@ const DocumentEditor = () => {
       }
     };
 
-    if (editor && !isInitialLoaded.current) {
+    if (editor && loadedDocIdRef.current !== id) {
       fetchDocument();
     }
   }, [id, editor]);
@@ -156,7 +160,7 @@ const DocumentEditor = () => {
 
   // Handle Manual Save
   const handleSave = async () => {
-    if (!editor || saveStatus === 'saving') return;
+    if (!editor || !editor.commands || saveStatus === 'saving') return;
 
     setSaveStatus('saving');
     setSaveError('');
